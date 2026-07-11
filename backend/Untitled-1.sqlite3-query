@@ -1,0 +1,7 @@
+-- database: /path/to/database.db
+
+-- database: c:\Users\lenovo\Desktop\Trekking_Management_System\instance\trekking_app.db
+
+-- Use the ▷ button in the top right corner to run the entire file.
+
+SELECT * FROM booking;

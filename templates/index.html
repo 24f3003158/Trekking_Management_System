@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Trekking Portal</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            /* Background Image add ki gayi hai */
+            background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
+                url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=2070&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            min-height: 100vh;
+            color: #eee;
+            padding-top: 50px;
+        }
+
+        .card {
+            background: #ffffff;
+            color: #333;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            transition: transform 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        h2,
+        h3,
+        h4,
+        h5 {
+            color: #0f2027;
+            font-weight: bold;
+        }
+
+        .btn {
+            border-radius: 10px;
+            font-weight: 600;
+        }
+
+        .list-group-item {
+            border-left: 5px solid #2c5364;
+            margin-bottom: 5px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app" class="container">
+        <div v-if="!isLoggedIn" class="d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+            <div class="card p-4"
+                style="max-width: 400px; width: 100%; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.3);">
+                <h2 class="text-center mb-4" style="color: #2c5364; font-weight: 700;">
+                    [[ isRegistering ? 'Create Account' : 'Welcome Back' ]]
+                </h2>
+
+                <div class="mb-3">
+                    <label class="form-label text-muted">Username</label>
+                    <input v-model="authForm.username" class="form-control form-control-lg"
+                        placeholder="Enter your username">
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label text-muted">Password</label>
+                    <input v-model="authForm.password" class="form-control form-control-lg" type="password"
+                        placeholder="••••••••">
+                </div>
+
+                <button v-if="!isRegistering" @click="handleLogin" class="btn btn-primary btn-lg w-100 mb-3"
+                    style="background: #2c5364; border: none;">Login</button>
+                <button v-else @click="handleRegister" class="btn btn-success btn-lg w-100 mb-3">Register</button>
+
+                <p class="text-center text-muted" @click="isRegistering = !isRegistering" style="cursor:pointer;">
+                    [[ isRegistering ? 'Already have an account? Login' : 'New user? Register here' ]]
+                </p>
+            </div>
+        </div>
+
+        <!-- Rest of your existing content (v-else block) remains exactly same -->
+        <div v-else>
+            <!-- Aapka baaki ka code yahan rahega... -->
+        </div>
+
+        <div class="card" v-else>
+            <div class="d-flex justify-content-between align-items-center">
+                <h3>Welcome, [[ userProfile.username ]]!</h3>
+                <button @click="handleLogout" class="btn btn-danger btn-sm">Logout</button>
+            </div>
+            <hr>
+
+            <div v-if="userProfile.role === 'Admin'">
+                <button @click="exportCSV" class="btn btn-info w-100 mb-4 text-white">📥 Export Booking History to
+                    CSV</button>
+                <h4>Add New Staff</h4>
+                <input v-model="newStaff.username" class="form-control mb-1" placeholder="Staff Username">
+                <input v-model="newStaff.password" type="password" class="form-control mb-1" placeholder="Password">
+                <button @click="addStaff" class="btn btn-warning w-100 mb-3">Add Staff</button>
+
+                <h4>Add New Trek</h4>
+                <input v-model="newTrek.name" class="form-control mb-1" placeholder="Trek Name">
+                <input v-model="newTrek.location" class="form-control mb-1" placeholder="Location">
+                <input v-model="newTrek.difficulty" class="form-control mb-1" placeholder="Difficulty">
+                <input v-model="newTrek.duration" class="form-control mb-1" placeholder="Duration">
+                <input v-model="newTrek.available_slots" class="form-control mb-1" placeholder="Available Slots">
+                <input v-model="newTrek.status" class="form-control mb-1" placeholder="Status">
+                <input v-model="newTrek.start_date" class="form-control mb-1" placeholder="Start Date">
+                <input v-model="newTrek.end_date" class="form-control mb-1" placeholder="End Date">
+                <input v-model="newTrek.slots" class="form-control mb-1" placeholder="Total Slots">
+                <button @click="addTrek" class="btn btn-success w-100 mb-4">Add Trek</button>
+
+                <h5>All Treks</h5>
+                <ul class="list-group">
+                    <li v-for="trek in allTreks" :key="trek.id" class="list-group-item">
+                        [[ trek.name ]]
+                        <select class="form-select mt-1" @change="assignStaff(trek.id, $event.target.value)">
+                            <option value="">Assign Staff</option>
+                            <option v-for="s in allStaff" :value="s.id">[[ s.username ]]</option>
+                        </select>
+
+                    </li>
+                </ul>
+                <h5>Manage Users</h5>
+                <ul class="list-group">
+                    <li v-for="user in allUsers" :key="user.id" class="list-group-item d-flex justify-content-between">
+                        [[ user.username ]]
+                        <button @click="toggleBlacklist(user.id)"
+                            :class="user.is_blacklisted ? 'btn-danger' : 'btn-warning'" class="btn btn-sm">
+                            [[user.is_blacklisted ? 'Unblacklist' : 'Blacklist']]
+                        </button>
+                    </li>
+                </ul>
+            </div>
+
+            <div v-else-if="userProfile.role === 'Staff'">
+                <h5>My Assigned Treks</h5>
+                <ul class="list-group">
+                    <li v-for="trek in staffTreks" :key="trek.id"
+                        class="list-group-item d-flex justify-content-between align-items-center">
+                        [[ trek.name ]] - Status: [[ trek.status ]]
+                        <button v-if="trek.status === 'Open'" @click="completeTrek(trek.id)"
+                            class="btn btn-success btn-sm">Complete</button>
+                    </li>
+                </ul>
+            </div>
+
+            <div v-else>
+                <div class="mb-4 p-3 bg-light rounded">
+                    <h5>My Stats</h5>
+                    <p>Total Bookings: [[ userStats.total_bookings ]] | Completed: [[ userStats.completed_bookings ]]
+                    </p>
+                </div>
+                <div class="input-group mb-3">
+                    <input v-model="searchQuery.location" class="form-control" placeholder="Search by Location">
+                    <input v-model="searchQuery.difficulty" class="form-control" placeholder="Difficulty">
+                    <button @click="searchTreks" class="btn btn-secondary">Search</button>
+                </div>
+
+                <h4 class="mb-3">Available Treks</h4>
+                <div class="row">
+                    <div class="col-md-6 mb-3" v-for="trek in allTreks" :key="trek.id">
+                        <div class="card h-100 border-primary">
+                            <img :src="'https://picsum.photos/400/200?random=' + trek.id" class="card-img-top"
+                                style="border-radius: 15px 15px 0 0; height: 150px; object-fit: cover;">
+                            <div class="card-body">
+                                <h5 class="card-title">[[ trek.name ]]</h5>
+                                <p class="card-text">📍 <strong>Location:</strong> [[ trek.location ]] <br> 🧗
+                                    <strong>Difficulty:</strong> [[ trek.difficulty ]] <br> 🎟️ <strong>Slots
+                                        Left:</strong> [[ trek.available_slots ]]
+                                </p>
+                                <button @click="bookTrek(trek.id)" class="btn btn-primary w-100">Book Now</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <hr>
+                <h5>My Booking History</h5>
+                <ul class="list-group">
+                    <li v-for="b in myBookings" :key="b.id"
+                        class="list-group-item d-flex justify-content-between align-items-center">
+
+                        Trek: [[ b.trek_name ]] - Status: [[ b.status ]]
+
+
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createApp, ref } = Vue;
+        createApp({
+            delimiters: ['[[', ']]'],
+            setup() {
+                const isLoggedIn = ref(false);
+                const isRegistering = ref(false);
+                const userProfile = ref({ username: '', role: '', id: 0 });
+                const authForm = ref({ username: '', password: '' });
+                const allTreks = ref([]);
+                const allStaff = ref([]);
+                const staffTreks = ref([]);
+                const myBookings = ref([]);
+                const newTrek = ref({ name: '', location: '', difficulty: '', duration: '', available_slots: '', status: '', start_date: '', end_date: '', slots: '' });
+                const newStaff = ref({ username: '', password: '' });
+                // Naya Data
+                const searchQuery = ref({ location: '', difficulty: '' });
+                const userStats = ref({ total_bookings: 0, completed_bookings: 0 });
+
+                const allUsers = ref([]);
+
+                const fetchAllData = async () => {
+                    const res = await fetch('/api/treks');
+                    if (res.ok) allTreks.value = await res.json();
+                    const resStaff = await fetch('/api/staffs');
+                    if (resStaff.ok) allStaff.value = await resStaff.json();
+
+                    if (userProfile.value.role === 'Staff') {
+                        const resStaffTreks = await fetch(`/api/staff/my-treks/${userProfile.value.id}`);
+                        if (resStaffTreks.ok) staffTreks.value = await resStaffTreks.json();
+                    }
+                    if (userProfile.value.role === 'Trekker') {
+                        const resBookings = await fetch(`/api/my-bookings/${userProfile.value.username}`);
+                        if (resBookings.ok) {
+                            const data = await resBookings.json();
+                            myBookings.value = data.bookings;
+                        }
+                        // Stats fetch karna
+                        const statRes = await fetch(`/api/user/stats/${userProfile.value.id}`);
+                        if (statRes.ok) userStats.value = await statRes.json();
+                    }
+
+                    if (userProfile.value.role === 'Admin') {
+                        const resUsers = await fetch('/api/admin/users');
+                        if (resUsers.ok) {
+                            allUsers.value = await resUsers.json();
+                            console.log("Users fetched:", allUsers.value);
+                        };
+
+                    }
+
+                }
+
+                const searchTreks = async () => {
+                    // URL Encode karein taaki spaces/symbols handle ho jayein
+                    const loc = encodeURIComponent(searchQuery.value.location);
+                    const diff = encodeURIComponent(searchQuery.value.difficulty);
+                    const url = `/api/treks/search?location=${loc}&difficulty=${diff}`;
+
+                    const res = await fetch(url);
+                    if (res.ok) {
+                        allTreks.value = await res.json();
+                    } else {
+                        console.error("Search failed");
+                    }
+                };
+
+                const handleLogin = async () => {
+                    const res = await fetch('/api/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(authForm.value)
+                    });
+                    const data = await res.json();
+                    if (res.ok) {
+                        userProfile.value = { username: data.username, role: data.role, id: data.id };
+                        isLoggedIn.value = true;
+                        fetchAllData();
+                    } else { alert("Login Failed!"); }
+                };
+
+                const handleRegister = async () => {
+                    const res = await fetch('/api/register', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(authForm.value)
+                    });
+                    if (res.ok) { alert("Registered Successfully!"); isRegistering.value = false; }
+                    else { alert("Registration Failed!"); }
+                };
+
+                const addStaff = async () => {
+                    const res = await fetch('/api/admin/add-staff', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(newStaff.value)
+                    });
+                    if (res.ok) { alert("Staff added!"); fetchAllData(); }
+                };
+
+                const addTrek = async () => {
+                    await fetch('/api/trek/create', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(newTrek.value)
+                    });
+                    fetchAllData();
+                };
+
+                //deleteTrek function ko hatayein aur ye add karein
+                const toggleBlacklist = async (userId) => {
+                    const res = await fetch(`/api/admin/toggle-blacklist/${userId}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+
+                    if (res.ok) alert("Status updated!");
+                    // Data refresh karein taaki status update ho jaye
+
+                };
+
+
+                const assignStaff = async (trekId, staffId) => {
+                    await fetch(`/api/admin/assign-staff/${trekId}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ staff_id: staffId })
+                    });
+                    fetchAllData();
+                };
+
+                const bookTrek = async (trekId) => {
+                    const res = await fetch('/api/book-trek', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ trek_id: trekId, username: userProfile.value.username })
+                    });
+                    if (res.ok) { alert("Booked!"); fetchAllData(); }
+                };
+
+                const cancelBooking = async (bookingId) => {
+                    const res = await fetch(`/api/cancel-booking/${bookingId}`, { method: 'DELETE' });
+                    if (res.ok) { alert("Booking Cancelled!"); fetchAllData(); }
+                };
+
+                const completeTrek = async (trekId) => {
+                    const res = await fetch(`/api/staff/complete-trek/${trekId}`, { method: 'POST' });
+                    if (res.ok) { alert("Trek Completed!"); fetchAllData(); }
+                };
+
+                const exportCSV = async () => {
+                    const res = await fetch('/api/export-csv', { method: 'POST' });
+                    if (res.ok) alert("Export task started!");
+                    else alert("Failed!");
+                };
+
+                const handleLogout = () => window.location.reload();
+
+                return {
+                    isLoggedIn, isRegistering, userProfile, authForm, allTreks, allStaff, staffTreks, myBookings, newTrek, newStaff,
+                    handleLogin, handleLogout, addTrek, addStaff, assignStaff, bookTrek, cancelBooking, completeTrek, handleRegister, exportCSV,
+                    searchQuery, userStats, searchTreks, toggleBlacklist, allUsers
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+
+</html>
