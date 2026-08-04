@@ -6,3 +6,10 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY', 'jwt_secret_token_key')
     REDIS_URL = "redis://localhost:6379/0"
+
+    CELERY_BEAT_SCHEDULE = {
+        'send-daily-reminder-every-24-hours':{
+            'task' : 'backend.tasks.send_daily_reminder',
+            'schedule' : 86400.0,
+        }
+    }

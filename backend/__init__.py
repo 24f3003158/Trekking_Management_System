@@ -8,10 +8,6 @@ from backend.config import Config
 from backend.models import db
 
 
-    
-
-
-
 def create_app():
     # Project ke root folder ka path nikalo
     basedir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
