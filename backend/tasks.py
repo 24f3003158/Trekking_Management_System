@@ -24,7 +24,7 @@ def export_bookings_to_csv():
 
 
 @celery.task
-def send_daily_reminder(user_email, trek_name):
+def send_daily_reminder():
     from backend.models import Booking, User
     app=create_app()
     with app.app_context():
@@ -32,7 +32,7 @@ def send_daily_reminder(user_email, trek_name):
 
         for b in bookings:
             user=User.query.get(b.user_id)
-            if user and user.email:
+            if user:
                 print(f"Daily Remainder: Hello {user.username}, don't forget your upcoming trek!")
         
         return "daily reminders sent successfully!"
