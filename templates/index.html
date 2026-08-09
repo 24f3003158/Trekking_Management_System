@@ -88,7 +88,7 @@
         <!-- Rest of your existing content (v-else block) remains exactly same -->
         <div v-else>
             <!-- Aapka baaki ka code yahan rahega... -->
-        </div>
+        
 
         <div class="card" v-else>
             <div class="d-flex justify-content-between align-items-center">
@@ -123,6 +123,39 @@
                         [[ trek.name ]]
                         <select class="form-select mt-1" @change="assignStaff(trek.id, $event.target.value)">
                             <option value="">Assign Staff</option>
+                            <option v-for="s in allStaff" :value="s.id">[[ s.username ]]</option>
+                        </select>
+
+                    </li>
+                </ul>
+
+                <!-- Admin All Treks Section ke andar -->
+                <ul class="list-group">
+                    <li v-for="trek in allTreks" :key="trek.id" class="list-group-item mb-3">
+                        <!-- Input fields taaki admin yahin se edit kar sake -->
+                        <div class="row g-2">
+                            <div class="col-md-3">
+                                <input v-model="trek.name" class="form-control form-control-sm" placeholder="Trek Name">
+                            </div>
+                            <div class="col-md-3">
+                                <input v-model="trek.location" class="form-control form-control-sm"
+                                    placeholder="Location">
+                            </div>
+                            <div class="col-md-2">
+                                <input v-model="trek.available_slots" class="form-control form-control-sm"
+                                    placeholder="Slots">
+                            </div>
+                            <div class="col-md-4">
+                                <!-- Update Button -->
+                                <button @click="updateTrek(trek)" class="btn btn-primary btn-sm w-100">Update
+                                    Trek</button>
+                            </div>
+                        </div>
+
+
+                        <!-- Aapka purana Assign Staff dropdown ya baaki code yahan rahega -->
+                        <select class="form-select mt-2 form-select-sm" v-model="trek.assigned_staff_id">
+                            <option value="" disabled selected>Assign Staff</option>
                             <option v-for="s in allStaff" :value="s.id">[[ s.username ]]</option>
                         </select>
 
@@ -194,6 +227,7 @@
                 </ul>
             </div>
         </div>
+        </div>
     </div>
 
     <script>
@@ -224,7 +258,7 @@
                     if (resStaff.ok) allStaff.value = await resStaff.json();
 
                     if (userProfile.value.role === 'Staff') {
-                        const resStaffTreks = await fetch(`/api/staff/my-treks/${userProfile.value.id}`);
+                        const resStaffTreks = await fetch('/api/staff/my-treks/${userProfile.value.id}');
                         if (resStaffTreks.ok) staffTreks.value = await resStaffTreks.json();
                     }
                     if (userProfile.value.role === 'Trekker') {
@@ -253,7 +287,7 @@
                     // URL Encode karein taaki spaces/symbols handle ho jayein
                     const loc = encodeURIComponent(searchQuery.value.location);
                     const diff = encodeURIComponent(searchQuery.value.difficulty);
-                    const url = `/api/treks/search?location=${loc}&difficulty=${diff}`;
+                    const url = '/api/treks/search?location=${loc}&difficulty=${diff}';
 
                     const res = await fetch(url);
                     if (res.ok) {
@@ -307,7 +341,7 @@
 
                 //deleteTrek function ko hatayein aur ye add karein
                 const toggleBlacklist = async (userId) => {
-                    const res = await fetch(`/api/admin/toggle-blacklist/${userId}`, {
+                    const res = await fetch('/api/admin/toggle-blacklist/${userId}', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' }
                     });
@@ -319,7 +353,7 @@
 
 
                 const assignStaff = async (trekId, staffId) => {
-                    await fetch(`/api/admin/assign-staff/${trekId}`, {
+                    await fetch('/api/admin/assign-staff/${trekId}', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ staff_id: staffId })
@@ -337,12 +371,12 @@
                 };
 
                 const cancelBooking = async (bookingId) => {
-                    const res = await fetch(`/api/cancel-booking/${bookingId}`, { method: 'DELETE' });
+                    const res = await fetch('/api/cancel-booking/${bookingId}', { method: 'DELETE' });
                     if (res.ok) { alert("Booking Cancelled!"); fetchAllData(); }
                 };
 
                 const completeTrek = async (trekId) => {
-                    const res = await fetch(`/api/staff/complete-trek/${trekId}`, { method: 'POST' });
+                    const res = await fetch('/api/staff/complete-trek/${trekId}', { method: 'POST' });
                     if (res.ok) { alert("Trek Completed!"); fetchAllData(); }
                 };
 

@@ -98,6 +98,8 @@ def book_trek():
 @api.route('/my-bookings/<username>', methods=['GET'])
 def get_my_bookings(username):
     user = User.query.filter_by(username=username).first()
+    if not user:
+        return jsonify({"error": "User not found"}), 404
     bookings = Booking.query.filter_by(user_id=user.id).all()
     booking_list = [{"id": b.id,"trek_name": b.trek_name, "status": b.status} for b in bookings]
     return jsonify({"bookings": booking_list}), 200
@@ -262,6 +264,29 @@ def get_user_stats(user_id):
         "total_bookings": total_bookings,
         "completed_bookings": completed_bookings
     }), 200
+
+
+@api.route('/admin/trek/update/<int:trek_id>', methods=['PUT'])
+def update_trek(trek_id):
+    trek = Trek.query.get(trek_id)
+    if not trek:
+        return jsonify({"error": "Trek not found"}), 404
+        
+    data = request.get_json()
+    
+    # जो डेटा भेजा जाएगा उसे अपडेट कर देंगे
+    trek.name = data.get('name', trek.name)
+    trek.location = data.get('location', trek.location)
+    trek.difficulty = data.get('difficulty', trek.difficulty)
+    trek.duration = data.get('duration', trek.duration)
+    trek.available_slots = data.get('available_slots', trek.available_slots)
+    trek.status = data.get('status', trek.status)
+
+    if 'assigned_staff_id' in data:
+        trek.assigned_staff_id = data.get('assigned_staff_id')
+    
+    db.session.commit()
+    return jsonify({"message": "Trek updated successfully!"}), 200
 
 
 @api.route('/admin/users', methods=['GET'])

@@ -76,88 +76,115 @@ createApp({
                 this.openTreks = await res.json();
             } else if (this.role === 'Staff') {
                 const res = await fetch('/api/staff/treks', {
-                    headers: { 'Authorization': Bearer ${this.token} }
-                });
-                this.staffTreks = await res.json();
+                    headers: { 'Authorization': 'Bearer ${ this.token}' }
+        });
+this.staffTreks = await res.json();
             }
         },
         async bookTrek(trekId) {
-            try {
-                const response = await fetch('/api/book-trek', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': Bearer ${this.token}
+    try {
+        const response = await fetch('/api/book-trek', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ${ this.token}'
                     },
-                    body: JSON.stringify({ trek_id: trekId })
-                });
-                const data = await response.json();
-                if (!response.ok) throw new Error(data.error || 'Booking failed');
+    body: JSON.stringify({ trek_id: trekId })
+});
+const data = await response.json();
+if (!response.ok) throw new Error(data.error || 'Booking failed');
 
-                this.triggerNotification(data.message, "success");
-                this.loadDashboardData(); 
+this.triggerNotification(data.message, "success");
+this.loadDashboardData(); 
             } catch (err) {
-                this.triggerNotification(err.message, 'danger');
-            }
+    this.triggerNotification(err.message, 'danger');
+}
         },
         async updateStaffTrek(trek) {
-            try {
-                const response = await fetch(/api/staff/trek/${trek.id}, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': Bearer ${this.token}
+    try {
+        const response = await fetch('/api/staff / trek / ${ trek.id }', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ${this.token}'
                     },
-                    body: JSON.stringify({ available_slots: trek.available_slots, status: trek.status })
-                });
-                if (!response.ok) throw new Error('Failed to save updates');
-                this.triggerNotification("Trek parameters modified successfully", "success");
+    body: JSON.stringify({ available_slots: trek.available_slots, status: trek.status })
+});
+if (!response.ok) throw new Error('Failed to save updates');
+this.triggerNotification("Trek parameters modified successfully", "success");
             } catch (err) {
-                this.triggerNotification(err.message, 'danger');
-            }
+    this.triggerNotification(err.message, 'danger');
+}
         },
         async createTrekRoute() {
-            try {
-                const response = await fetch('/api/admin/treks', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': Bearer ${this.token}
+    try {
+        const response = await fetch('/api/admin/treks', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ${ this.token}'
                     },
-                    body: JSON.stringify(this.trekForm)
-                });
-                if (!response.ok) throw new Error('Failed to create route');
-                this.triggerNotification("New Trek Published Successfully", "success");
-                this.trekForm = { name: '', location: '', difficulty: '', duration: '', available_slots: '', start_date: '', end_date: '' };
+    body: JSON.stringify(this.trekForm)
+});
+if (!response.ok) throw new Error('Failed to create route');
+this.triggerNotification("New Trek Published Successfully", "success");
+this.trekForm = { name: '', location: '', difficulty: '', duration: '', available_slots: '', start_date: '', end_date: '' };
             } catch (err) {
-                this.triggerNotification(err.message, 'danger');
-            }
+    this.triggerNotification(err.message, 'danger');
+}
         },
         async createStaffAccount() {
-            try {
-                const response = await fetch('/api/admin/add-staff', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': Bearer ${this.token}
+    try {
+        const response = await fetch('/api/admin/add-staff', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ${this.token}'
                     },
-                    body: JSON.stringify(this.staffForm)
-                });
-                if (!response.ok) throw new Error('Failed to register staff');
-                this.triggerNotification("Staff account successfully active", "success");
-                this.staffForm = { username: '', password: '', contact_details: '' };
+    body: JSON.stringify(this.staffForm)
+});
+if (!response.ok) throw new Error('Failed to register staff');
+this.triggerNotification("Staff account successfully active", "success");
+this.staffForm = { username: '', password: '', contact_details: '' };
             } catch (err) {
-                this.triggerNotification(err.message, 'danger');
+    this.triggerNotification(err.message, 'danger');
+}
+        },
+
+        async updateTrek(trek) {
+            try {
+                const response = await fetch('/api/admin/trek/update/${ trek.id }', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: trek.name,
+                        location: trek.location,
+                        difficulty: trek.difficulty,
+                        duration: trek.duration,
+                        available_slots: trek.available_slots,
+                        status: trek.status,
+                        assigned_staff_id: trek.assigned_staff_id
+                    })
+                });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error || 'Failed to update trek');
+
+                alert("Trek updated successfully!");
+                this.loadDashboardData(); // डेटा रिफ्रेश करने के लिए
+            } catch (err) {
+                alert(err.message);
             }
         },
-        logout() {
-            this.token = ''; 
-            this.role = ''; 
-            this.username = '';
-            localStorage.clear();
-        }
+logout() {
+    this.token = '';
+    this.role = '';
+    this.username = '';
+    localStorage.clear();
+}
     },
-    mounted() {
-        this.loadDashboardData();
-    }
+mounted() {
+    this.loadDashboardData();
+}
 }).mount('#app');
